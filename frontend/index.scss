@@ -1,0 +1,14 @@
+@charset "utf-8";
+@import "bulma-0.9.4/bulma.sass";
+
+body {
+  padding: 1rem;
+}
+
+.block:not(:last-child) {
+  margin-bottom: 1.5rem;
+}
+
+table th {
+  padding-right: 2rem;
+}
