@@ -258,6 +258,7 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
+ "web-sys",
  "wherego",
  "yew",
  "yewdux",

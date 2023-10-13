@@ -1,7 +1,7 @@
 use yew::prelude::*;
 use yewdux::prelude::*;
 
-use components::DestinationReadOnly;
+use components::{DestinationReadOnly, Username};
 
 mod components;
 mod store;
@@ -19,9 +19,12 @@ fn App() -> Html {
         })
         .collect::<Vec<_>>();
     html! {
-        <table>
-           {dests_html}
-        </table>
+        <div>
+            <Username />
+            <table>
+               {dests_html}
+            </table>
+        </div>
     }
 }
 
