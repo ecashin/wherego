@@ -1,6 +1,9 @@
 use yew::prelude::*;
 use yewdux::prelude::*;
 
+use components::DestinationReadOnly;
+
+mod components;
 mod store;
 
 #[function_component]
@@ -11,9 +14,7 @@ fn App() -> Html {
         .iter()
         .map(|d| {
             html! {
-                <tr>
-                    <td>{d.name.clone()}</td>
-                </tr>
+                <DestinationReadOnly dest={d.clone()} />
             }
         })
         .collect::<Vec<_>>();
