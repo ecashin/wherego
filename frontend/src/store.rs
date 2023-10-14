@@ -1,13 +1,18 @@
 use serde::{Deserialize, Serialize};
 use yewdux::prelude::*;
 
-use wherego::Destination;
+use wherego::{Destination, Score};
 
-const DEFAULT_USERNAME: &str = "edit me";
+pub const DEFAULT_USERNAME: &str = "edit me";
 
 #[derive(Debug, Clone, Deserialize, PartialEq, Default, Eq, Serialize, Store)]
 pub struct Destinations {
     pub value: Vec<Destination>,
+}
+
+#[derive(Debug, Clone, Deserialize, PartialEq, Default, Eq, Serialize, Store)]
+pub struct Scores {
+    pub value: Vec<Score>,
 }
 
 #[derive(Debug, Clone, Deserialize, PartialEq, Eq, Serialize, Store)]
