@@ -1,29 +1,17 @@
 use yew::prelude::*;
 use yewdux::prelude::*;
 
-use components::{DestinationC, Username};
+use components::{ScoresC, Username};
 
 mod components;
 mod store;
 
 #[function_component]
 fn App() -> Html {
-    let (destinations, _dests_dispatch) = use_store::<store::Destinations>();
-    let dests_html = destinations
-        .value
-        .iter()
-        .map(|d| {
-            html! {
-                <DestinationC dest={d.clone()} />
-            }
-        })
-        .collect::<Vec<_>>();
     html! {
         <div>
             <Username />
-            <table>
-               {dests_html}
-            </table>
+            <ScoresC />
         </div>
     }
 }

@@ -8,6 +8,26 @@ use wherego::{Destination, Score};
 
 use crate::store;
 
+#[function_component]
+pub fn ScoresC() -> Html {
+    let (destinations, _dests_dispatch) = use_store::<store::Destinations>();
+    let dests_html = destinations
+        .value
+        .iter()
+        .map(|d| {
+            html! {
+                <DestinationC dest={d.clone()} />
+            }
+        })
+        .collect::<Vec<_>>();
+    html! {
+        <table class={"is-striped"}>
+            <tr><th>{"Destination"}</th><th>{"Description"}</th><th>{"ID"}</th><th>{"Score"}</th></tr>
+            {dests_html}
+        </table>
+    }
+}
+
 #[derive(PartialEq, Properties)]
 pub struct DestinationCProps {
     pub dest: Destination,
