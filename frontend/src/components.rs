@@ -32,6 +32,20 @@ pub fn ScoresC() -> Html {
     }
 }
 
+fn post_destination(msg: &str, d: &Destination) {
+    log!(JsValue::from(msg));
+    let d = d.clone();
+    yew::platform::spawn_local(async move {
+        reqwest::Client::new()
+            .post("http://127.0.0.1:3030/api/destinations")
+            .json(&d)
+            .send()
+            .await
+            .unwrap();
+        store::fetch_dests_scores();
+    });
+}
+
 fn post_score(msg: &str, s: &Score) {
     log!(JsValue::from(msg));
     let s = s.clone();
@@ -58,7 +72,10 @@ pub fn NewDestinationC() -> Html {
         d.value.description = input.value();
         d.value.id = -1;
     });
-    let onclick = dispatch.reduce_callback_with(|_, _| Rc::new(store::NewDestination::default()));
+    let onclick = dispatch.reduce_callback_with(|d, _| {
+        post_destination("sending new destination to database", &d.value);
+        Rc::new(store::NewDestination::default())
+    });
     html! {
         <tr>
             <td><input value={new_dest.value.name.to_string()} oninput={oninput_name} /></td>

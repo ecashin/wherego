@@ -1,7 +1,7 @@
 use yew::prelude::*;
-use yewdux::prelude::*;
 
 use components::{ScoresC, Username};
+use store::fetch_dests_scores;
 
 mod components;
 mod store;
@@ -17,20 +17,6 @@ fn App() -> Html {
 }
 
 fn main() {
-    let dest_dispatch = Dispatch::<store::Destinations>::new();
-    let scores_dispatch = Dispatch::<store::Scores>::new();
-    yew::platform::spawn_local(async move {
-        let sent = reqwest::get("http://127.0.0.1:3030/api/destinations")
-            .await
-            .unwrap();
-        let received = sent.json().await.unwrap();
-        dest_dispatch.set(store::Destinations { value: received });
-        let sent = reqwest::get("http://127.0.0.1:3030/api/scores")
-            .await
-            .unwrap();
-        let received = sent.json().await.unwrap();
-        scores_dispatch.set(store::Scores { value: received });
-    });
-
+    fetch_dests_scores();
     yew::Renderer::<App>::new().render();
 }

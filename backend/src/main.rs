@@ -76,10 +76,34 @@ async fn post_score(pool: Pool, score: Score) -> std::result::Result<impl Reply,
     client
         .execute(sql, &[&score.username, &score.dest_id, &score.score])
         .await
-        .context("preparing statement")
+        .context("executing statement")
         .unwrap();
 
     Ok(warp::reply::json(&score))
+}
+
+async fn post_destination(
+    pool: Pool,
+    dest: Destination,
+) -> std::result::Result<impl Reply, Infallible> {
+    println!("received new destination: {dest:?}");
+    let client = pool
+        .get()
+        .await
+        .context("getting DB client from pool")
+        .unwrap();
+    let sql = "
+        insert into wherego_destinations (name, description)
+        values
+        ($1, $2)
+    ";
+    client
+        .execute(sql, &[&dest.name, &dest.description])
+        .await
+        .context("executing statement")
+        .unwrap();
+
+    Ok(warp::reply::json(&dest))
 }
 
 async fn get_destinations(pool: Pool) -> std::result::Result<impl Reply, Infallible> {
@@ -135,7 +159,19 @@ async fn api_routes(pool: Pool) -> warp::filters::BoxedFilter<(impl Reply,)> {
             .and(warp::body::content_length_limit(1024 * 16).and(warp::body::json()))
             .and_then(post_score)
     };
-    get_destinations.or(get_scores).or(post_score).boxed()
+    let post_destination = {
+        let pool = pool.clone();
+        warp::post()
+            .and(warp::path!("api" / "destinations"))
+            .and(warp::any().map(move || pool.clone()))
+            .and(warp::body::content_length_limit(1024 * 16).and(warp::body::json()))
+            .and_then(post_destination)
+    };
+    get_destinations
+        .or(get_scores)
+        .or(post_score)
+        .or(post_destination)
+        .boxed()
 }
 
 #[tokio::main]
