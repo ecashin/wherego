@@ -68,7 +68,7 @@ pub fn NewDestinationC() -> Html {
         d.value.id = -1;
     });
     let oninput_desc = dispatch.reduce_mut_callback_with(|d, e: InputEvent| {
-        let input: HtmlInputElement = e.target_unchecked_into::<HtmlInputElement>();
+        let input: HtmlTextAreaElement = e.target_unchecked_into::<HtmlTextAreaElement>();
         d.value.description = input.value();
         d.value.id = -1;
     });
@@ -79,7 +79,7 @@ pub fn NewDestinationC() -> Html {
     html! {
         <tr>
             <td><input value={new_dest.value.name.to_string()} oninput={oninput_name} /></td>
-            <td><input value={new_dest.value.description.to_string()} oninput={oninput_desc} /></td>
+            <td><textarea value={new_dest.value.description.to_string()} oninput={oninput_desc} /></td>
             <td><button {onclick}>{"create"}</button></td>
             <td>{"unscored"}</td>
         </tr>
