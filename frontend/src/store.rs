@@ -6,6 +6,11 @@ use wherego::{Destination, Score};
 pub const DEFAULT_USERNAME: &str = "edit me";
 
 #[derive(Debug, Clone, Deserialize, PartialEq, Default, Eq, Serialize, Store)]
+pub struct NewDestination {
+    pub value: Destination,
+}
+
+#[derive(Debug, Clone, Deserialize, PartialEq, Default, Eq, Serialize, Store)]
 pub struct Destinations {
     pub value: Vec<Destination>,
 }

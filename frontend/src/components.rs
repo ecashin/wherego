@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use gloo_console::log;
 use wasm_bindgen::JsValue;
 use web_sys::{HtmlInputElement, HtmlTextAreaElement};
@@ -22,15 +24,12 @@ pub fn ScoresC() -> Html {
         .collect::<Vec<_>>();
     html! {
         <table class={"is-striped"}>
+            <tr><th>{"New Destination"}</th><th>{"Description"}</th><th></th><th></th></tr>
+            <NewDestinationC />
             <tr><th>{"Destination"}</th><th>{"Description"}</th><th>{"ID"}</th><th>{"Score"}</th></tr>
             {dests_html}
         </table>
     }
-}
-
-#[derive(PartialEq, Properties)]
-pub struct DestinationCProps {
-    pub dest: Destination,
 }
 
 fn post_score(msg: &str, s: &Score) {
@@ -44,6 +43,35 @@ fn post_score(msg: &str, s: &Score) {
             .await
             .unwrap();
     });
+}
+
+#[function_component]
+pub fn NewDestinationC() -> Html {
+    let (new_dest, dispatch) = use_store::<store::NewDestination>();
+    let oninput_name = dispatch.reduce_mut_callback_with(|d, e: InputEvent| {
+        let input: HtmlInputElement = e.target_unchecked_into::<HtmlInputElement>();
+        d.value.name = input.value();
+        d.value.id = -1;
+    });
+    let oninput_desc = dispatch.reduce_mut_callback_with(|d, e: InputEvent| {
+        let input: HtmlInputElement = e.target_unchecked_into::<HtmlInputElement>();
+        d.value.description = input.value();
+        d.value.id = -1;
+    });
+    let onclick = dispatch.reduce_callback_with(|_, _| Rc::new(store::NewDestination::default()));
+    html! {
+        <tr>
+            <td><input value={new_dest.value.name.to_string()} oninput={oninput_name} /></td>
+            <td><input value={new_dest.value.description.to_string()} oninput={oninput_desc} /></td>
+            <td><button {onclick}>{"create"}</button></td>
+            <td>{"unscored"}</td>
+        </tr>
+    }
+}
+
+#[derive(PartialEq, Properties)]
+pub struct DestinationCProps {
+    pub dest: Destination,
 }
 
 #[function_component]
