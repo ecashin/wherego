@@ -3,8 +3,23 @@ use yewdux::prelude::*;
 
 use wherego::{Destination, Score};
 
+use crate::full_url;
+
 pub const DEFAULT_USERNAME: &str = "edit me";
 
+#[derive(Debug, Clone, Deserialize, PartialEq, Eq, Serialize, Store)]
+pub struct BaseUrl {
+    pub value: String,
+}
+
+impl Default for BaseUrl {
+    // https://github.com/seanmonstar/reqwest/issues/988#issuecomment-1047403159
+    fn default() -> Self {
+        Self {
+            value: web_sys::window().unwrap().origin().to_string(),
+        }
+    }
+}
 #[derive(Debug, Clone, Deserialize, PartialEq, Default, Eq, Serialize, Store)]
 pub struct NegotiationResults {
     pub value: Option<Vec<Destination>>,
@@ -25,14 +40,10 @@ pub fn fetch_dests_scores() {
     let scores_dispatch = Dispatch::<Scores>::new();
     let checked_usernames_dispatch = Dispatch::<CheckedUsernames>::new();
     yew::platform::spawn_local(async move {
-        let sent = reqwest::get("http://127.0.0.1:3030/api/destinations")
-            .await
-            .unwrap();
+        let sent = reqwest::get(full_url("/api/destinations")).await.unwrap();
         let received = sent.json().await.unwrap();
         dest_dispatch.set(Destinations { value: received });
-        let sent = reqwest::get("http://127.0.0.1:3030/api/scores")
-            .await
-            .unwrap();
+        let sent = reqwest::get(full_url("/api/scores")).await.unwrap();
         let received: Vec<Score> = sent.json().await.unwrap();
         let mut usernames: Vec<_> = received
             .iter()

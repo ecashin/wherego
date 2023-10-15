@@ -8,7 +8,7 @@ use yewdux::prelude::*;
 
 use wherego::{Destination, Score};
 
-use crate::store;
+use crate::{full_url, store};
 
 #[function_component]
 pub fn NegotiationResultsC() -> Html {
@@ -209,7 +209,7 @@ fn post_destination(msg: &str, d: &Destination) {
     let d = d.clone();
     yew::platform::spawn_local(async move {
         reqwest::Client::new()
-            .post("http://127.0.0.1:3030/api/destinations")
+            .post(full_url("/api/destinations"))
             .json(&d)
             .send()
             .await
@@ -223,7 +223,7 @@ fn post_score(msg: &str, s: &Score) {
     let s = s.clone();
     yew::platform::spawn_local(async move {
         reqwest::Client::new()
-            .post("http://127.0.0.1:3030/api/scores")
+            .post(full_url("/api/scores"))
             .json(&s)
             .send()
             .await

@@ -7,6 +7,11 @@ use store::fetch_dests_scores;
 mod components;
 mod store;
 
+pub fn full_url(relative_url: &str) -> String {
+    let base_url = &Dispatch::<store::BaseUrl>::new().get().value;
+    format!("{base_url}{relative_url}")
+}
+
 #[function_component]
 fn App() -> Html {
     let (editing_dest, _editing_dest_dispatch) = use_store::<store::DestBeingEdited>();
