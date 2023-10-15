@@ -17,6 +17,8 @@ const CREATE_DB_ASSETS: [&str; 2] = [include_str!("destinations.sql"), include_s
 struct Cli {
     postgres_user: String,
     postgres_password: String,
+    #[arg(long, default_value_t = 3030)]
+    listen_port: u16,
     #[arg(long)]
     listen_ip: Option<Ipv4Addr>,
     #[arg(long)]
@@ -218,7 +220,7 @@ async fn main() -> Result<()> {
     } else {
         Ipv4Addr::new(127, 0, 0, 1)
     };
-    warp::serve(routes).run((listen_ip, 3030)).await;
+    warp::serve(routes).run((listen_ip, cli.listen_port)).await;
 
     Ok(())
 }
