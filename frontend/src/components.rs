@@ -35,7 +35,10 @@ pub fn NegotiationResultsC() -> Html {
     html! {
         <div>
             {dismiss}
-            {results_html}
+            <table class="is-striped">
+                <tr><th>{"Destination"}</th><th>{"Description"}</th><th>{"My Score"}</th></tr>
+                {results_html}
+            </table>
         </div>
     }
 }
@@ -79,6 +82,7 @@ pub fn UserSelectC() -> Html {
                     .iter()
                     .filter_map(|(u, is_checked)| if *is_checked { Some(u.clone()) } else { None })
                     .collect::<Vec<_>>();
+                // collect one series of canonical scores per checked user
                 let scores_per_p = participants
                     .iter()
                     .map(|u| {
@@ -97,6 +101,7 @@ pub fn UserSelectC() -> Html {
                         argsort(&s_p)
                     })
                     .collect::<Vec<_>>();
+                // sum canonical scores for each destination
                 let mut totals = if scores_per_p.is_empty() {
                     vec![]
                 } else {
@@ -107,16 +112,6 @@ pub fn UserSelectC() -> Html {
                     for i in 0..dests.len() {
                         totals[i] += s_p[i];
                     }
-                }
-                // XXXdebug
-                log!(JsValue::from("totals"));
-                log!(serde_json::to_string(&totals).unwrap());
-                for (scores, username) in scores_per_p.iter().zip(participants.iter()) {
-                    log!(JsValue::from(username));
-                    log!(serde_json::to_string(
-                        &scores.iter().map(|&v| v as i32).collect::<Vec<_>>()
-                    )
-                    .unwrap());
                 }
                 let mut results = dests.iter().zip(totals.into_iter()).collect::<Vec<_>>();
                 results.sort_by_key(|(_d, count)| -(*count as i64));
@@ -132,7 +127,7 @@ pub fn UserSelectC() -> Html {
         }
     };
     html! {
-        <div>
+        <div class={"has-background-grey-light has-text-light"}>
             {checkboxes}
             {negotiate}
         </div>
@@ -256,11 +251,11 @@ pub fn NewDestinationC() -> Html {
         Rc::new(store::NewDestination::default())
     });
     html! {
-        <tr>
+        <tr class={"has-text-primary-dark has-background-light"}>
             <td><input value={new_dest.value.name.to_string()} oninput={oninput_name} /></td>
             <td><textarea value={new_dest.value.description.to_string()} oninput={oninput_desc} /></td>
             <td><button {onclick}>{"create"}</button></td>
-            <td>{"unscored"}</td>
+            <td></td>
         </tr>
     }
 }
@@ -347,12 +342,11 @@ pub struct TextProps {
 
 #[function_component]
 pub fn Text(props: &TextProps) -> Html {
+    //        <b style={"padding: 0 1rem 0 0.3rem"}>{props.heading.clone()}</b>
     html! {
         <div>
-            <div class="content">
-                <b>{props.heading.clone()}</b>
-            </div>
-            <input value={props.text.clone()} oninput={props.oninput.clone()} />
+            <label for={"username-input"}>{props.heading.clone()}</label>
+            <input id={"username-input"} value={props.text.clone()} oninput={props.oninput.clone()} />
         </div>
     }
 }
