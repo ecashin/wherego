@@ -1,7 +1,7 @@
 use yew::prelude::*;
 use yewdux::prelude::*;
 
-use components::{DestEditC, ScoresC, Username};
+use components::{DestEditC, ScoresC, UserSelectC, Username};
 use store::fetch_dests_scores;
 
 mod components;
@@ -22,6 +22,7 @@ fn App() -> Html {
     html! {
         <div>
             <Username />
+            <UserSelectC />
             {bottom}
         </div>
     }

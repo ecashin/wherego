@@ -11,6 +11,33 @@ use wherego::{Destination, Score};
 use crate::store;
 
 #[function_component]
+pub fn UserSelectC() -> Html {
+    let (users, dispatch) = use_store::<store::CheckedUsernames>();
+    let checkboxes = users
+        .value
+        .iter()
+        .enumerate()
+        .map(|(i, (username, is_checked))| {
+            let id = format!("checkbox{i}");
+            let onclick = dispatch.reduce_mut_callback_with(move |users, _| {
+                users.value[i].1 = !users.value[i].1;
+            });
+            html! {
+                <>
+                    <input type={"checkbox"} id={id.clone()} checked={*is_checked} {onclick} />
+                    <label for={id}>{username}</label>
+                </>
+            }
+        })
+        .collect::<Vec<_>>();
+    html! {
+        <div>
+            {checkboxes}
+        </div>
+    }
+}
+
+#[function_component]
 pub fn DestEditC() -> Html {
     let (editing_dest, editing_dest_dispatch) = use_store::<store::DestBeingEdited>();
     let name = {
@@ -104,6 +131,8 @@ fn post_score(msg: &str, s: &Score) {
             .send()
             .await
             .unwrap();
+        // in case it's a new username or someone else stored scores ...
+        store::fetch_dests_scores();
     });
 }
 

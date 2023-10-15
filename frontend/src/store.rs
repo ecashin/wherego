@@ -10,9 +10,15 @@ pub struct DestBeingEdited {
     pub value: Option<Destination>,
 }
 
+#[derive(Debug, Clone, Deserialize, PartialEq, Default, Eq, Serialize, Store)]
+pub struct CheckedUsernames {
+    pub value: Vec<(String, bool)>,
+}
+
 pub fn fetch_dests_scores() {
     let dest_dispatch = Dispatch::<Destinations>::new();
     let scores_dispatch = Dispatch::<Scores>::new();
+    let checked_usernames_dispatch = Dispatch::<CheckedUsernames>::new();
     yew::platform::spawn_local(async move {
         let sent = reqwest::get("http://127.0.0.1:3030/api/destinations")
             .await
@@ -22,8 +28,17 @@ pub fn fetch_dests_scores() {
         let sent = reqwest::get("http://127.0.0.1:3030/api/scores")
             .await
             .unwrap();
-        let received = sent.json().await.unwrap();
+        let received: Vec<Score> = sent.json().await.unwrap();
+        let mut usernames: Vec<_> = received
+            .iter()
+            .map(|score| score.username.clone())
+            .collect();
+        usernames.sort();
+        usernames.dedup();
         scores_dispatch.set(Scores { value: received });
+        checked_usernames_dispatch.set(CheckedUsernames {
+            value: usernames.into_iter().map(|u| (u, false)).collect(),
+        });
     });
 }
 
