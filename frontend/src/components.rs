@@ -11,8 +11,28 @@ use wherego::{Destination, Score};
 use crate::store;
 
 #[function_component]
+pub fn NegotiationResultsC() -> Html {
+    let (_, dispatch) = use_store::<store::NegotiationResults>();
+    let dismiss = {
+        let onclick = dispatch.reduce_mut_callback_with(|n, _| {
+            n.value = None;
+        });
+        html! {
+            <button {onclick}>{"Dismiss"}</button>
+        }
+    };
+    html! {
+        <div>
+            <p>{"Negotiation Results"}</p>
+            {dismiss}
+        </div>
+    }
+}
+
+#[function_component]
 pub fn UserSelectC() -> Html {
     let (users, dispatch) = use_store::<store::CheckedUsernames>();
+    let (_, negotiation_dispatch) = use_store::<store::NegotiationResults>();
     let checkboxes = users
         .value
         .iter()
@@ -30,9 +50,18 @@ pub fn UserSelectC() -> Html {
             }
         })
         .collect::<Vec<_>>();
+    let negotiate = {
+        let onclick = negotiation_dispatch.reduce_mut_callback_with(|n, _| {
+            n.value = Some(vec![]);
+        });
+        html! {
+            <button {onclick}>{"Negotiate"}</button>
+        }
+    };
     html! {
         <div>
             {checkboxes}
+            {negotiate}
         </div>
     }
 }
