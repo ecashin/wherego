@@ -12,7 +12,7 @@ use crate::store;
 
 #[function_component]
 pub fn NegotiationResultsC() -> Html {
-    let (_, dispatch) = use_store::<store::NegotiationResults>();
+    let (results, dispatch) = use_store::<store::NegotiationResults>();
     let dismiss = {
         let onclick = dispatch.reduce_mut_callback_with(|n, _| {
             n.value = None;
@@ -21,18 +21,38 @@ pub fn NegotiationResultsC() -> Html {
             <button {onclick}>{"Dismiss"}</button>
         }
     };
+    let results_html = results
+        .value
+        .as_ref()
+        .unwrap()
+        .iter()
+        .map(|d| {
+            html! {
+                <DestinationC dest={d.clone()} is_read_only={true} />
+            }
+        })
+        .collect::<Vec<_>>();
     html! {
         <div>
-            <p>{"Negotiation Results"}</p>
             {dismiss}
+            {results_html}
         </div>
     }
+}
+
+// https://stackoverflow.com/questions/69764050/how-to-get-the-indices-that-would-sort-a-vec/69764256#69764256
+pub fn argsort<T: Ord>(data: &[T]) -> Vec<usize> {
+    let mut indices = (0..data.len()).collect::<Vec<_>>();
+    indices.sort_by_key(|&i| &data[i]);
+    indices
 }
 
 #[function_component]
 pub fn UserSelectC() -> Html {
     let (users, dispatch) = use_store::<store::CheckedUsernames>();
     let (_, negotiation_dispatch) = use_store::<store::NegotiationResults>();
+    let (scores, _) = use_store::<store::Scores>();
+    let (dests, _) = use_store::<store::Destinations>();
     let checkboxes = users
         .value
         .iter()
@@ -51,9 +71,62 @@ pub fn UserSelectC() -> Html {
         })
         .collect::<Vec<_>>();
     let negotiate = {
-        let onclick = negotiation_dispatch.reduce_mut_callback_with(|n, _| {
-            n.value = Some(vec![]);
-        });
+        let dests = dests.value.clone();
+        let onclick =
+            negotiation_dispatch.reduce_mut_callback_with(move |negotiation_results, _| {
+                let participants = users
+                    .value
+                    .iter()
+                    .filter_map(|(u, is_checked)| if *is_checked { Some(u.clone()) } else { None })
+                    .collect::<Vec<_>>();
+                let scores_per_p = participants
+                    .iter()
+                    .map(|u| {
+                        let mut s_p = vec![]; // participant's scores for all destinations
+                        for d in &dests {
+                            let s_d = scores
+                                .value
+                                .iter()
+                                .find(|&score| score.dest_id == d.id && score.username == *u);
+                            s_p.push(if let Some(score) = s_d {
+                                score.score
+                            } else {
+                                0
+                            });
+                        }
+                        argsort(&s_p)
+                    })
+                    .collect::<Vec<_>>();
+                let mut totals = if scores_per_p.is_empty() {
+                    vec![]
+                } else {
+                    vec![0; dests.len()]
+                };
+                for s_p in &scores_per_p {
+                    assert_eq!(s_p.len(), dests.len());
+                    for i in 0..dests.len() {
+                        totals[i] += s_p[i];
+                    }
+                }
+                // XXXdebug
+                log!(JsValue::from("totals"));
+                log!(serde_json::to_string(&totals).unwrap());
+                for (scores, username) in scores_per_p.iter().zip(participants.iter()) {
+                    log!(JsValue::from(username));
+                    log!(serde_json::to_string(
+                        &scores.iter().map(|&v| v as i32).collect::<Vec<_>>()
+                    )
+                    .unwrap());
+                }
+                let mut results = dests.iter().zip(totals.into_iter()).collect::<Vec<_>>();
+                results.sort_by_key(|(_d, count)| -(*count as i64));
+                negotiation_results.value = Some(
+                    results
+                        .into_iter()
+                        .map(|(d, _s)| d.clone())
+                        .collect::<Vec<_>>(),
+                );
+            });
         html! {
             <button {onclick}>{"Negotiate"}</button>
         }
@@ -195,6 +268,8 @@ pub fn NewDestinationC() -> Html {
 #[derive(PartialEq, Properties)]
 pub struct DestinationCProps {
     pub dest: Destination,
+    #[prop_or_default]
+    pub is_read_only: bool,
 }
 
 #[function_component]
@@ -212,7 +287,9 @@ pub fn DestinationC(props: &DestinationCProps) -> Html {
         }
         score
     };
-    let edit_button = {
+    let edit_button = if props.is_read_only {
+        html! {}
+    } else {
         let dest = props.dest.clone();
         let onclick = editing_dest_dispatch.reduce_mut_callback_with(move |d, _| {
             d.value = Some(dest.clone());
@@ -221,7 +298,7 @@ pub fn DestinationC(props: &DestinationCProps) -> Html {
             <button {onclick}>{"Edit"}</button>
         }
     };
-    let score_html = if username.value != store::DEFAULT_USERNAME {
+    let score_html = if !props.is_read_only && username.value != store::DEFAULT_USERNAME {
         let oninput = scores_dispatch.reduce_mut_callback_with(move |scores, e: InputEvent| {
             let input: HtmlInputElement = e.target_unchecked_into::<HtmlInputElement>();
             let mut changed = false;

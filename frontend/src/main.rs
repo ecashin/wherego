@@ -13,7 +13,10 @@ fn App() -> Html {
     let (negotiation_results, _) = use_store::<store::NegotiationResults>();
     let bottom = if editing_dest.value.is_some() {
         html! {
-            <DestEditC />
+            <>
+                <UserSelectC />
+                <DestEditC />
+            </>
         }
     } else if negotiation_results.value.is_some() {
         html! {
@@ -21,13 +24,15 @@ fn App() -> Html {
         }
     } else {
         html! {
-            <ScoresC />
+            <>
+                <UserSelectC />
+                <ScoresC />
+            </>
         }
     };
     html! {
         <div>
             <Username />
-            <UserSelectC />
             {bottom}
         </div>
     }
