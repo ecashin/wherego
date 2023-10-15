@@ -11,6 +11,54 @@ use wherego::{Destination, Score};
 use crate::store;
 
 #[function_component]
+pub fn DestEditC() -> Html {
+    let (editing_dest, editing_dest_dispatch) = use_store::<store::DestBeingEdited>();
+    let name = {
+        let oninput = editing_dest_dispatch.reduce_mut_callback_with(|d, e: InputEvent| {
+            let input: HtmlInputElement = e.target_unchecked_into::<HtmlInputElement>();
+            d.value.as_mut().unwrap().name = input.value();
+        });
+        html! {
+            <input value={editing_dest.value.as_ref().unwrap().name.clone()} {oninput} />
+        }
+    };
+    let desc = {
+        let oninput = editing_dest_dispatch.reduce_mut_callback_with(|d, e: InputEvent| {
+            let input: HtmlTextAreaElement = e.target_unchecked_into::<HtmlTextAreaElement>();
+            d.value.as_mut().unwrap().description = input.value();
+        });
+        html! {
+            <textarea value={editing_dest.value.as_ref().unwrap().description.clone()} {oninput} />
+        }
+    };
+    let cancel = {
+        let onclick = editing_dest_dispatch.reduce_mut_callback_with(|d, _| {
+            d.value = None;
+        });
+        html! {
+            <button {onclick}>{"Cancel"}</button>
+        }
+    };
+    let submit = {
+        let onclick = editing_dest_dispatch.reduce_mut_callback_with(|d, _| {
+            post_destination("edited destination", d.value.as_ref().unwrap());
+            d.value = None;
+        });
+        html! {
+            <button {onclick}>{"Submit"}</button>
+        }
+    };
+    html! {
+        <div>
+            {name}
+            {desc}
+            {cancel}
+            {submit}
+        </div>
+    }
+}
+
+#[function_component]
 pub fn ScoresC() -> Html {
     let (destinations, _dests_dispatch) = use_store::<store::Destinations>();
     let dests_html = destinations
@@ -26,7 +74,7 @@ pub fn ScoresC() -> Html {
         <table class={"is-striped"}>
             <tr><th>{"New Destination"}</th><th>{"Description"}</th><th></th><th></th></tr>
             <NewDestinationC />
-            <tr><th>{"Destination"}</th><th>{"Description"}</th><th>{"ID"}</th><th>{"Score"}</th></tr>
+            <tr><th>{"Destination"}</th><th>{"Description"}</th><th></th><th>{"Score"}</th></tr>
             {dests_html}
         </table>
     }
@@ -95,6 +143,7 @@ pub struct DestinationCProps {
 pub fn DestinationC(props: &DestinationCProps) -> Html {
     let (username, _) = use_store::<store::Username>();
     let (scores, scores_dispatch) = use_store::<store::Scores>();
+    let (_editing_dest, editing_dest_dispatch) = use_store::<store::DestBeingEdited>();
     let dest_id = props.dest.id;
     let dest_score = {
         let mut score = 0;
@@ -104,6 +153,15 @@ pub fn DestinationC(props: &DestinationCProps) -> Html {
             }
         }
         score
+    };
+    let edit_button = {
+        let dest = props.dest.clone();
+        let onclick = editing_dest_dispatch.reduce_mut_callback_with(move |d, _| {
+            d.value = Some(dest.clone());
+        });
+        html! {
+            <button {onclick}>{"Edit"}</button>
+        }
     };
     let score_html = if username.value != store::DEFAULT_USERNAME {
         let oninput = scores_dispatch.reduce_mut_callback_with(move |scores, e: InputEvent| {
@@ -139,7 +197,7 @@ pub fn DestinationC(props: &DestinationCProps) -> Html {
         <tr>
             <td>{props.dest.name.clone()}</td>
             <td>{props.dest.description.clone()}</td>
-            <td>{props.dest.id}</td>
+            <td>{edit_button}</td>
             <td>{score_html}</td>
         </tr>
     }

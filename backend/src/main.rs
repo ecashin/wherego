@@ -92,16 +92,28 @@ async fn post_destination(
         .await
         .context("getting DB client from pool")
         .unwrap();
-    let sql = "
-        insert into wherego_destinations (name, description)
-        values
-        ($1, $2)
-    ";
-    client
-        .execute(sql, &[&dest.name, &dest.description])
-        .await
-        .context("executing statement")
-        .unwrap();
+    if dest.id < 0 {
+        let sql = "
+            insert into wherego_destinations (name, description)
+            values
+            ($1, $2)
+        ";
+        client
+            .execute(sql, &[&dest.name, &dest.description])
+            .await
+            .context("executing statement")
+            .unwrap();
+    } else {
+        let sql = "
+            update wherego_destinations set name = $1, description = $2
+            where id = $3
+        ";
+        client
+            .execute(sql, &[&dest.name, &dest.description, &dest.id])
+            .await
+            .context("executing statement")
+            .unwrap();
+    }
 
     Ok(warp::reply::json(&dest))
 }

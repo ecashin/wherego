@@ -5,6 +5,11 @@ use wherego::{Destination, Score};
 
 pub const DEFAULT_USERNAME: &str = "edit me";
 
+#[derive(Debug, Clone, Deserialize, PartialEq, Default, Eq, Serialize, Store)]
+pub struct DestBeingEdited {
+    pub value: Option<Destination>,
+}
+
 pub fn fetch_dests_scores() {
     let dest_dispatch = Dispatch::<Destinations>::new();
     let scores_dispatch = Dispatch::<Scores>::new();

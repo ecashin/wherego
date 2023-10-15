@@ -1,6 +1,7 @@
 use yew::prelude::*;
+use yewdux::prelude::*;
 
-use components::{ScoresC, Username};
+use components::{DestEditC, ScoresC, Username};
 use store::fetch_dests_scores;
 
 mod components;
@@ -8,10 +9,20 @@ mod store;
 
 #[function_component]
 fn App() -> Html {
+    let (editing_dest, _editing_dest_dispatch) = use_store::<store::DestBeingEdited>();
+    let bottom = if editing_dest.value.is_none() {
+        html! {
+            <ScoresC />
+        }
+    } else {
+        html! {
+            <DestEditC />
+        }
+    };
     html! {
         <div>
             <Username />
-            <ScoresC />
+            {bottom}
         </div>
     }
 }
