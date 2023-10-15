@@ -17,6 +17,8 @@ const CREATE_DB_ASSETS: [&str; 2] = [include_str!("destinations.sql"), include_s
 struct Cli {
     postgres_user: String,
     postgres_password: String,
+    #[arg(long)]
+    reinitialize_database: bool,
 }
 
 async fn set_up_database(pool: Pool) -> Result<()> {
@@ -200,9 +202,11 @@ async fn main() -> Result<()> {
         .max_size(8)
         .build()
         .context("creating DB pool")?;
-    set_up_database(pool.clone())
-        .await
-        .context("initializing DB")?;
+    if cli.reinitialize_database {
+        set_up_database(pool.clone())
+            .await
+            .context("initializing DB")?;
+    }
 
     let routes = api_routes(pool.clone())
         .await
