@@ -1,4 +1,4 @@
-use std::convert::Infallible;
+use std::{convert::Infallible, net::Ipv4Addr};
 
 use anyhow::{Context, Result};
 use clap::Parser;
@@ -7,7 +7,7 @@ use deadpool_postgres::{
     Manager, Pool,
 };
 use log::info;
-use warp::{hyper::StatusCode, Filter, Reply};
+use warp::{Filter, Reply};
 
 use wherego::{Destination, Score};
 
@@ -17,6 +17,10 @@ const CREATE_DB_ASSETS: [&str; 2] = [include_str!("destinations.sql"), include_s
 struct Cli {
     postgres_user: String,
     postgres_password: String,
+    #[arg(long, default_value_t = 3030)]
+    listen_port: u16,
+    #[arg(long)]
+    listen_ip: Option<Ipv4Addr>,
     #[arg(long)]
     reinitialize_database: bool,
 }
@@ -211,7 +215,12 @@ async fn main() -> Result<()> {
     let routes = api_routes(pool.clone())
         .await
         .or(warp::get().and(warp::fs::dir("../frontend/dist")));
-    warp::serve(routes).run(([127, 0, 0, 1], 3030)).await;
+    let listen_ip = if let Some(ip) = cli.listen_ip {
+        ip
+    } else {
+        Ipv4Addr::new(127, 0, 0, 1)
+    };
+    warp::serve(routes).run((listen_ip, cli.listen_port)).await;
 
     Ok(())
 }
