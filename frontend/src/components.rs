@@ -35,7 +35,7 @@ pub fn NegotiationResultsC() -> Html {
     html! {
         <div>
             {dismiss}
-            <table class="is-striped">
+            <table class={"table is-striped"}>
                 <tr><th>{"Destination"}</th><th>{"Description"}</th><th>{"My Score"}</th></tr>
                 {results_html}
             </table>
@@ -195,7 +195,7 @@ pub fn ScoresC() -> Html {
         })
         .collect::<Vec<_>>();
     html! {
-        <table class={"is-striped"}>
+        <table class={"table is-striped"}>
             <tr><th>{"New Destination"}</th><th>{"Description"}</th><th></th><th></th></tr>
             <NewDestinationC />
             <tr><th>{"Destination"}</th><th>{"Description"}</th><th></th><th>{"Score"}</th></tr>
