@@ -35,7 +35,7 @@ pub fn NegotiationResultsC() -> Html {
     html! {
         <div>
             {dismiss}
-            <table class="is-striped">
+            <table class={"table is-striped"}>
                 <tr><th>{"Destination"}</th><th>{"Description"}</th><th>{"My Score"}</th></tr>
                 {results_html}
             </table>
@@ -165,7 +165,7 @@ pub fn DestEditC() -> Html {
     };
     let submit = {
         let onclick = editing_dest_dispatch.reduce_mut_callback_with(|d, _| {
-            post_destination("edited destination", d.value.as_ref().unwrap());
+            put_destination("edited destination", d.value.as_ref().unwrap());
             d.value = None;
         });
         html! {
@@ -195,7 +195,7 @@ pub fn ScoresC() -> Html {
         })
         .collect::<Vec<_>>();
     html! {
-        <table class={"is-striped"}>
+        <table class={"table is-striped"}>
             <tr><th>{"New Destination"}</th><th>{"Description"}</th><th></th><th></th></tr>
             <NewDestinationC />
             <tr><th>{"Destination"}</th><th>{"Description"}</th><th></th><th>{"Score"}</th></tr>
@@ -204,7 +204,21 @@ pub fn ScoresC() -> Html {
     }
 }
 
-fn post_destination(msg: &str, d: &Destination) {
+fn put_destination(msg: &str, d: &Destination) {
+    log!(JsValue::from(msg));
+    let d = d.clone();
+    yew::platform::spawn_local(async move {
+        reqwest::Client::new()
+            .put(full_url("/api/destination"))
+            .json(&d)
+            .send()
+            .await
+            .unwrap();
+        store::fetch_dests_scores();
+    });
+}
+
+fn post_new_destination(msg: &str, d: &Destination) {
     log!(JsValue::from(msg));
     let d = d.clone();
     yew::platform::spawn_local(async move {
@@ -247,7 +261,7 @@ pub fn NewDestinationC() -> Html {
         d.value.id = -1;
     });
     let onclick = dispatch.reduce_callback_with(|d, _| {
-        post_destination("sending new destination to database", &d.value);
+        post_new_destination("sending new destination to database", &d.value);
         Rc::new(store::NewDestination::default())
     });
     html! {

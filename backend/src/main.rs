@@ -88,7 +88,30 @@ async fn post_score(pool: Pool, score: Score) -> std::result::Result<impl Reply,
     Ok(warp::reply::json(&score))
 }
 
-async fn post_destination(
+async fn put_destination(
+    pool: Pool,
+    dest: Destination,
+) -> std::result::Result<impl Reply, Infallible> {
+    println!("received destination: {dest:?}");
+    let client = pool
+        .get()
+        .await
+        .context("getting DB client from pool")
+        .unwrap();
+    let sql = "
+        update wherego_destinations set name = $1, description = $2
+        where id = $3
+    ";
+    client
+        .execute(sql, &[&dest.name, &dest.description, &dest.id])
+        .await
+        .context("executing statement")
+        .unwrap();
+
+    Ok(warp::reply::json(&dest))
+}
+
+async fn post_new_destination(
     pool: Pool,
     dest: Destination,
 ) -> std::result::Result<impl Reply, Infallible> {
@@ -98,28 +121,16 @@ async fn post_destination(
         .await
         .context("getting DB client from pool")
         .unwrap();
-    if dest.id < 0 {
-        let sql = "
-            insert into wherego_destinations (name, description)
-            values
-            ($1, $2)
-        ";
-        client
-            .execute(sql, &[&dest.name, &dest.description])
-            .await
-            .context("executing statement")
-            .unwrap();
-    } else {
-        let sql = "
-            update wherego_destinations set name = $1, description = $2
-            where id = $3
-        ";
-        client
-            .execute(sql, &[&dest.name, &dest.description, &dest.id])
-            .await
-            .context("executing statement")
-            .unwrap();
-    }
+    let sql = "
+        insert into wherego_destinations (name, description)
+        values
+        ($1, $2)
+    ";
+    client
+        .execute(sql, &[&dest.name, &dest.description])
+        .await
+        .context("executing statement")
+        .unwrap();
 
     Ok(warp::reply::json(&dest))
 }
@@ -177,18 +188,27 @@ async fn api_routes(pool: Pool) -> warp::filters::BoxedFilter<(impl Reply,)> {
             .and(warp::body::content_length_limit(1024 * 16).and(warp::body::json()))
             .and_then(post_score)
     };
-    let post_destination = {
+    let post_new_destination = {
         let pool = pool.clone();
         warp::post()
             .and(warp::path!("api" / "destinations"))
             .and(warp::any().map(move || pool.clone()))
             .and(warp::body::content_length_limit(1024 * 16).and(warp::body::json()))
-            .and_then(post_destination)
+            .and_then(post_new_destination)
+    };
+    let put_destination = {
+        let pool = pool.clone();
+        warp::put()
+            .and(warp::path!("api" / "destination"))
+            .and(warp::any().map(move || pool.clone()))
+            .and(warp::body::content_length_limit(1024 * 16).and(warp::body::json()))
+            .and_then(put_destination)
     };
     get_destinations
         .or(get_scores)
         .or(post_score)
-        .or(post_destination)
+        .or(put_destination)
+        .or(post_new_destination)
         .boxed()
 }
 
