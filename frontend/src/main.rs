@@ -40,7 +40,6 @@ fn App() -> Html {
         <div>
             <Username />
             {bottom}
-            <dragrank::DestinationList />
         </div>
     }
 }

@@ -4,41 +4,61 @@ use wasm_bindgen::JsValue;
 use yew::prelude::*;
 use yewdux::prelude::*;
 
-use wherego::Destination;
+use wherego::{Destination, Score};
 
+use crate::full_url;
 use crate::store;
 
 #[function_component]
 pub fn DestinationList() -> Html {
     let (dests, dests_dispatch) = use_store::<store::Destinations>();
+    let (username, _) = use_store::<store::Username>();
     let list_items = dests
         .value
         .iter()
         .map(|d| {
             html! {
-                <DestListItem dest={d.clone()} />
+                <DestListItem username={username.value.clone()} dest={d.clone()} />
             }
         })
         .collect::<Vec<_>>();
     html! {
-        <ul>
+        <table class="table is-striped">
+            <tr><th>{"Destination"}</th><th>{"Description"}</th><th></th></tr>
             {list_items}
-        </ul>
+        </table>
     }
 }
 
 #[derive(PartialEq, Properties)]
 pub struct DestListItemProps {
     pub dest: Destination,
+    pub username: String,
+}
+
+fn put_scores(msg: &str, s: &Vec<Score>) {
+    log!(JsValue::from(msg));
+    let s = s.clone();
+    yew::platform::spawn_local(async move {
+        reqwest::Client::new()
+            .put(full_url("/api/scores"))
+            .json(&s)
+            .send()
+            .await
+            .unwrap();
+        store::fetch_dests_scores();
+    });
 }
 
 #[styled_component]
 pub fn DestListItem(props: &DestListItemProps) -> Html {
+    let username = props.username.clone();
     let dest_name = props.dest.name.clone();
     let dest_id = props.dest.id;
     let (selected_id, select_dispatch) = use_store::<store::SelectedDestinationId>();
     let (over_id, over_dispatch) = use_store::<store::OverDestinationId>();
     let (dests, dests_dispatch) = use_store::<store::Destinations>();
+    let (editing_dest, editing_dest_dispatch) = use_store::<store::DestBeingEdited>();
     let ondragstart = {
         let dest_name = dest_name.clone();
         select_dispatch.reduce_mut_callback_with(move |s, _e| {
@@ -73,7 +93,30 @@ pub fn DestListItem(props: &DestListItemProps) -> Html {
             dests.value = new_order;
             selected_dispatch.set(store::SelectedDestinationId { value: -1 });
             over_dispatch.set(store::OverDestinationId { value: -1 });
+            let scores_dispatch = Dispatch::<store::Scores>::new();
+            let n = dests.value.len();
+            let new_scores = dests
+                .value
+                .iter()
+                .enumerate()
+                .map(|(i, d)| Score {
+                    dest_id: d.id,
+                    username: username.clone(),
+                    score: (n - i) as i64,
+                })
+                .collect();
+            put_scores("saving scores after drag", &new_scores);
+            scores_dispatch.set(store::Scores { value: new_scores });
         })
+    };
+    let edit_button = {
+        let dest = props.dest.clone();
+        let onclick = editing_dest_dispatch.reduce_mut_callback_with(move |d, _| {
+            d.value = Some(dest.clone());
+        });
+        html! {
+            <button {onclick}>{"Edit"}</button>
+        }
     };
     let class = if over_id.value == dest_id {
         log!(JsValue::from("over me"));
@@ -82,13 +125,18 @@ pub fn DestListItem(props: &DestListItemProps) -> Html {
         css!("cursor: pointer; user-select: none;")
     };
     html! {
-        <li
+        <tr
             class={class}
             draggable={"true"}
             {ondragstart}
             {ondragover}
             {ondragend}
-        >{&dest_name}</li>
+        >
+            <td>{&dest_name}</td>
+            <td>{&props.dest.description}</td>
+            <td>{edit_button}</td>
+            <td></td>
+        </tr>
     }
 }
 
