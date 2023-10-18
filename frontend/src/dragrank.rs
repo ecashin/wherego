@@ -60,7 +60,8 @@ pub fn DestListItem(props: &DestListItemProps) -> Html {
         dests_dispatch.reduce_mut_callback(move |dests| {
             let selected_dispatch = Dispatch::<store::SelectedDestinationId>::new();
             let selected_id = selected_dispatch.get().value;
-            let over_id = Dispatch::<store::OverDestinationId>::new().get().value;
+            let over_dispatch = Dispatch::<store::OverDestinationId>::new();
+            let over_id = over_dispatch.get().value;
             let new_order = move_before(&dests.value, selected_id, over_id);
             let label = |d: &Destination| format!("{}:({})", d.id, d.name);
             let msg = format!(
@@ -71,11 +72,18 @@ pub fn DestListItem(props: &DestListItemProps) -> Html {
             log!(JsValue::from(&msg));
             dests.value = new_order;
             selected_dispatch.set(store::SelectedDestinationId { value: -1 });
+            over_dispatch.set(store::OverDestinationId { value: -1 });
         })
+    };
+    let class = if over_id.value == dest_id {
+        log!(JsValue::from("over me"));
+        css!("cursor: pointer; user-select: none; border-top: 2px dotted rgb(0, 0, 0);")
+    } else {
+        css!("cursor: pointer; user-select: none;")
     };
     html! {
         <li
-            class={css!("cursor: pointer; user-select: none;")}
+            class={class}
             draggable={"true"}
             {ondragstart}
             {ondragover}
