@@ -8,6 +8,28 @@ use crate::full_url;
 pub const DEFAULT_USERNAME: &str = "edit me";
 
 #[derive(Debug, Clone, Deserialize, PartialEq, Eq, Serialize, Store)]
+pub struct SelectedDestinationId {
+    pub value: i64,
+}
+
+impl Default for SelectedDestinationId {
+    fn default() -> Self {
+        Self { value: -1 }
+    }
+}
+
+#[derive(Debug, Clone, Deserialize, PartialEq, Eq, Serialize, Store)]
+pub struct OverDestinationId {
+    pub value: i64,
+}
+
+impl Default for OverDestinationId {
+    fn default() -> Self {
+        Self { value: -1 }
+    }
+}
+
+#[derive(Debug, Clone, Deserialize, PartialEq, Eq, Serialize, Store)]
 pub struct BaseUrl {
     pub value: String,
 }
