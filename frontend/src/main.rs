@@ -5,6 +5,7 @@ use components::{DestEditC, NegotiationResultsC, ScoresC, UserSelectC, Username}
 use store::fetch_dests_scores;
 
 mod components;
+mod dragrank;
 mod store;
 
 pub fn full_url(relative_url: &str) -> String {

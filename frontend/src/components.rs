@@ -8,7 +8,7 @@ use yewdux::prelude::*;
 
 use wherego::{Destination, Score};
 
-use crate::{full_url, store};
+use crate::{dragrank::DestinationList, full_url, store};
 
 #[function_component]
 pub fn NegotiationResultsC() -> Html {
@@ -185,22 +185,14 @@ pub fn DestEditC() -> Html {
 #[function_component]
 pub fn ScoresC() -> Html {
     let (destinations, _dests_dispatch) = use_store::<store::Destinations>();
-    let dests_html = destinations
-        .value
-        .iter()
-        .map(|d| {
-            html! {
-                <DestinationC dest={d.clone()} />
-            }
-        })
-        .collect::<Vec<_>>();
     html! {
-        <table class={"table is-striped"}>
-            <tr><th>{"New Destination"}</th><th>{"Description"}</th><th></th><th></th></tr>
-            <NewDestinationC />
-            <tr><th>{"Destination"}</th><th>{"Description"}</th><th></th><th>{"Score"}</th></tr>
-            {dests_html}
-        </table>
+        <>
+            <table class={"table is-striped"}>
+                <tr><th>{"New Destination"}</th><th>{"Description"}</th><th></th><th></th></tr>
+                <NewDestinationC />
+            </table>
+            <DestinationList />
+        </>
     }
 }
 
