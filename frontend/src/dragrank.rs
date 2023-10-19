@@ -7,7 +7,7 @@ use yewdux::prelude::*;
 use wherego::{Destination, Score};
 
 use crate::full_url;
-use crate::store;
+use crate::store::{self, DEFAULT_USERNAME};
 
 #[function_component]
 pub fn DestinationList() -> Html {
@@ -124,19 +124,30 @@ pub fn DestListItem(props: &DestListItemProps) -> Html {
     } else {
         css!("cursor: pointer; user-select: none;")
     };
-    html! {
-        <tr
-            class={class}
-            draggable={"true"}
-            {ondragstart}
-            {ondragover}
-            {ondragend}
-        >
-            <td>{&dest_name}</td>
-            <td>{&props.dest.description}</td>
-            <td>{edit_button}</td>
-            <td></td>
-        </tr>
+    if props.username == DEFAULT_USERNAME {
+        html! {
+            <tr>
+                <td>{&dest_name}</td>
+                <td>{&props.dest.description}</td>
+                <td></td>
+                <td></td>
+            </tr>
+        }
+    } else {
+        html! {
+            <tr
+                class={class}
+                draggable={"true"}
+                {ondragstart}
+                {ondragover}
+                {ondragend}
+            >
+                <td>{&dest_name}</td>
+                <td>{&props.dest.description}</td>
+                <td>{edit_button}</td>
+                <td></td>
+            </tr>
+        }
     }
 }
 
