@@ -185,12 +185,20 @@ pub fn DestEditC() -> Html {
 #[function_component]
 pub fn ScoresC() -> Html {
     let (destinations, _dests_dispatch) = use_store::<store::Destinations>();
-    html! {
-        <>
+    let (username, _) = use_store::<store::Username>();
+    let new_dest_html = if username.value == store::DEFAULT_USERNAME {
+        html! {}
+    } else {
+        html! {
             <table class={"table is-striped"}>
                 <tr><th>{"New Destination"}</th><th>{"Description"}</th><th></th><th></th></tr>
                 <NewDestinationC />
             </table>
+        }
+    };
+    html! {
+        <>
+            {new_dest_html}
             <DestinationList />
         </>
     }
